@@ -1,0 +1,1337 @@
+{
+ "users": {
+  "description": "Staff and system accounts that can resolve exceptions (synthetic labels, no real people).",
+  "primary_key": "user_id",
+  "cardinality": "1:N resolutions (resolved_by); 1:N status_history (changed_by)",
+  "lifecycle": "",
+  "foreign_keys": [],
+  "fields": [
+   {
+    "name": "user_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": true,
+    "rule": "USR-000 system, USR-0xx analysts, USR-1xx risk reviewers"
+   },
+   {
+    "name": "display_name",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "role",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "OPS_ANALYST",
+     "RISK_REVIEWER",
+     "SYSTEM"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   }
+  ]
+ },
+ "merchants": {
+  "description": "Merchants that accept payments. Fee terms are fixed per merchant.",
+  "primary_key": "merchant_id",
+  "cardinality": "1:N payment_orders",
+  "lifecycle": "Active from onboarded_date.",
+  "foreign_keys": [],
+  "fields": [
+   {
+    "name": "merchant_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": true,
+    "rule": "MER-000001 pattern"
+   },
+   {
+    "name": "legal_name",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "invented name"
+   },
+   {
+    "name": "country",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "US",
+     "DE",
+     "GB",
+     "IN"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "settlement_currency",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "USD",
+     "EUR",
+     "GBP",
+     "INR"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": "every order of the merchant uses this currency"
+   },
+   {
+    "name": "fee_rate_bps",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "basis points",
+    "unique": false,
+    "rule": "200..350"
+   },
+   {
+    "name": "fixed_fee_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": ">= 0, charged on every capture"
+   },
+   {
+    "name": "onboarded_date",
+    "type": "DATE",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "effective date: before the first order"
+   }
+  ]
+ },
+ "payment_orders": {
+  "description": "One row per customer payment order.",
+  "primary_key": "payment_id",
+  "cardinality": "1:N payment_attempts (1 or 2); 1:N processor_events; 1:0..N settlement_lines",
+  "lifecycle": "FAILED (no capture), or CAPTURED -> PARTIALLY_REFUNDED -> REFUNDED. The state changes are the processor_events rows.",
+  "foreign_keys": [
+   {
+    "column": "merchant_id",
+    "references": "merchants.merchant_id"
+   }
+  ],
+  "fields": [
+   {
+    "name": "payment_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": true,
+    "rule": "PAY-2026-00000001 pattern, numbered by order_ts"
+   },
+   {
+    "name": "merchant_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK merchants"
+   },
+   {
+    "name": "customer_ref",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "opaque token, not personal data"
+   },
+   {
+    "name": "order_ts",
+    "type": "TIMESTAMP",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "UTC, on or after the merchant's onboarded_date"
+   },
+   {
+    "name": "currency",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "USD",
+     "EUR",
+     "GBP",
+     "INR"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": "equals the merchant's settlement_currency"
+   },
+   {
+    "name": "amount_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "> 0"
+   },
+   {
+    "name": "payment_method",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "CARD_VISA",
+     "CARD_MC",
+     "WALLET",
+     "UPI"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "status",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "FAILED",
+     "CAPTURED",
+     "PARTIALLY_REFUNDED",
+     "REFUNDED"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": "derived from the canonical processor events"
+   },
+   {
+    "name": "captured_amount_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "sum of canonical CAPTURED events"
+   },
+   {
+    "name": "refunded_amount_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "sum of canonical REFUND_ISSUED events, <= captured"
+   }
+  ]
+ },
+ "payment_attempts": {
+  "description": "Authorisation attempts for an order. A second attempt only follows a decline.",
+  "primary_key": "attempt_id",
+  "cardinality": "N:1 payment_orders; 1:N processor_events",
+  "lifecycle": "",
+  "foreign_keys": [
+   {
+    "column": "payment_id",
+    "references": "payment_orders.payment_id"
+   }
+  ],
+  "fields": [
+   {
+    "name": "attempt_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": true,
+    "rule": "ATT-<payment_id>-01"
+   },
+   {
+    "name": "payment_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK payment_orders"
+   },
+   {
+    "name": "attempt_no",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "1 or 2, consecutive"
+   },
+   {
+    "name": "attempt_ts",
+    "type": "TIMESTAMP",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ">= order_ts"
+   },
+   {
+    "name": "amount_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "equals the order amount"
+   },
+   {
+    "name": "status",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "DECLINED",
+     "CAPTURED"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": "DECLINED, or CAPTURED when the attempt was captured"
+   },
+   {
+    "name": "decline_code",
+    "type": "STRING",
+    "required": false,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "only when DECLINED"
+   }
+  ]
+ },
+ "processor_events": {
+  "description": "Append-only processor webhook log. History is never overwritten.",
+  "primary_key": "processor_event_id",
+  "cardinality": "N:1 payment_orders; N:1 payment_attempts; canonical event 1:0..1 settlement_lines (0 for declines, authorisations and dropped captures)",
+  "lifecycle": "",
+  "foreign_keys": [
+   {
+    "column": "payment_id",
+    "references": "payment_orders.payment_id"
+   },
+   {
+    "column": "attempt_id",
+    "references": "payment_attempts.attempt_id"
+   }
+  ],
+  "fields": [
+   {
+    "name": "processor_event_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": true,
+    "rule": "EVT-2026-00000001, numbered by received_ts"
+   },
+   {
+    "name": "payment_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK payment_orders"
+   },
+   {
+    "name": "attempt_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK payment_attempts"
+   },
+   {
+    "name": "event_type",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "AUTHORIZED",
+     "DECLINED",
+     "CAPTURED",
+     "REFUND_ISSUED"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "event_ts",
+    "type": "TIMESTAMP",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "processor clock"
+   },
+   {
+    "name": "received_ts",
+    "type": "TIMESTAMP",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ">= event_ts"
+   },
+   {
+    "name": "amount_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "> 0 (declines carry the order amount)"
+   },
+   {
+    "name": "currency",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "USD",
+     "EUR",
+     "GBP",
+     "INR"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "webhook_event_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "processor's own event id, shared by redeliveries"
+   },
+   {
+    "name": "delivery_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "one per HTTP delivery; a repeated value means our pipeline wrote the same delivery twice"
+   },
+   {
+    "name": "idempotency_key",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "same business event = same key (not unique on purpose)"
+   }
+  ]
+ },
+ "settlement_batches": {
+  "description": "Processor settlement batch: one currency, one cut-off.",
+  "primary_key": "batch_id",
+  "cardinality": "1:N settlement_lines; N:M bank_statement_lines through reconciliation_matches (paid in several tranches)",
+  "lifecycle": "Effective date: expected_payout_date.",
+  "foreign_keys": [],
+  "fields": [
+   {
+    "name": "batch_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": true,
+    "rule": "SET-2026-000001 pattern, numbered by cutoff_ts"
+   },
+   {
+    "name": "currency",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "USD",
+     "EUR",
+     "GBP",
+     "INR"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "cutoff_ts",
+    "type": "TIMESTAMP",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "expected_payout_date",
+    "type": "DATE",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "cut-off date + 2 business days"
+   },
+   {
+    "name": "line_count",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "count of settlement_lines"
+   },
+   {
+    "name": "gross_captured_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "sum of gross on CAPTURE lines"
+   },
+   {
+    "name": "gross_refunded_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "sum of gross on REFUND lines"
+   },
+   {
+    "name": "total_fees_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "sum of line fees"
+   },
+   {
+    "name": "net_payout_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "captured - refunded - fees"
+   }
+  ]
+ },
+ "settlement_lines": {
+  "description": "One line per captured or refunded event inside a batch.",
+  "primary_key": "settlement_line_id",
+  "cardinality": "N:1 settlement_batches; N:1 processor_events; 0..1 reconciliation_matches",
+  "lifecycle": "",
+  "foreign_keys": [
+   {
+    "column": "batch_id",
+    "references": "settlement_batches.batch_id"
+   },
+   {
+    "column": "payment_id",
+    "references": "payment_orders.payment_id"
+   },
+   {
+    "column": "processor_event_id",
+    "references": "processor_events.processor_event_id"
+   }
+  ],
+  "fields": [
+   {
+    "name": "settlement_line_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": true,
+    "rule": "STL-<batch_id>-001"
+   },
+   {
+    "name": "batch_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK settlement_batches"
+   },
+   {
+    "name": "payment_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK payment_orders"
+   },
+   {
+    "name": "processor_event_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK processor_events (the canonical event)"
+   },
+   {
+    "name": "line_type",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "CAPTURE",
+     "REFUND"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "currency",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "USD",
+     "EUR",
+     "GBP",
+     "INR"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "gross_amount_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "> 0, equals the event amount"
+   },
+   {
+    "name": "fee_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "capture: round_half_even(gross*bps/10000)+fixed; refund: 0"
+   },
+   {
+    "name": "net_amount_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "capture: gross-fee; refund: -gross"
+   }
+  ]
+ },
+ "bank_statement_lines": {
+  "description": "Bank statement entries for the processor funds account.",
+  "primary_key": "bank_line_id",
+  "cardinality": "optional N:1 settlement_batches (an orphan line has no batch); 0..1 reconciliation_matches",
+  "lifecycle": "",
+  "foreign_keys": [],
+  "fields": [
+   {
+    "name": "bank_line_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": true,
+    "rule": "BANK-2026-000001 pattern, numbered by value_date"
+   },
+   {
+    "name": "value_date",
+    "type": "DATE",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "effective date"
+   },
+   {
+    "name": "booking_date",
+    "type": "DATE",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ">= value_date"
+   },
+   {
+    "name": "amount_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "signed: credit > 0, debit < 0"
+   },
+   {
+    "name": "currency",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "USD",
+     "EUR",
+     "GBP",
+     "INR"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "reference",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "free text; payouts look like 'PSP PAYOUT SET-2026-000123 T2/4'"
+   },
+   {
+    "name": "counterparty_name",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   }
+  ]
+ },
+ "reconciliation_matches": {
+  "description": "Bridge table: bank line <-> batch (N:M) and processor event <-> settlement line (1:1).",
+  "primary_key": "match_id",
+  "cardinality": "the bridge: bank lines N:M batches; events 1:1 lines; 0..N exceptions point at a match",
+  "lifecycle": "",
+  "foreign_keys": [
+   {
+    "column": "bank_line_id",
+    "references": "bank_statement_lines.bank_line_id"
+   },
+   {
+    "column": "batch_id",
+    "references": "settlement_batches.batch_id"
+   },
+   {
+    "column": "processor_event_id",
+    "references": "processor_events.processor_event_id"
+   },
+   {
+    "column": "settlement_line_id",
+    "references": "settlement_lines.settlement_line_id"
+   }
+  ],
+  "fields": [
+   {
+    "name": "match_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": true,
+    "rule": "REC-2026-000001 pattern, numbered by matched_at"
+   },
+   {
+    "name": "match_level",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "BANK_TO_BATCH",
+     "EVENT_TO_LINE"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "bank_line_id",
+    "type": "STRING",
+    "required": false,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK, set for BANK_TO_BATCH"
+   },
+   {
+    "name": "batch_id",
+    "type": "STRING",
+    "required": false,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK, set for BANK_TO_BATCH"
+   },
+   {
+    "name": "processor_event_id",
+    "type": "STRING",
+    "required": false,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK, set for EVENT_TO_LINE"
+   },
+   {
+    "name": "settlement_line_id",
+    "type": "STRING",
+    "required": false,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK, set for EVENT_TO_LINE"
+   },
+   {
+    "name": "currency",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "USD",
+     "EUR",
+     "GBP",
+     "INR"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "matched_amount_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "the bank amount, or the settlement line gross"
+   },
+   {
+    "name": "group_expected_amount_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "batch net (bank level) or event amount"
+   },
+   {
+    "name": "group_diff_minor",
+    "type": "INT",
+    "required": false,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": "sum matched - expected; empty when currencies differ"
+   },
+   {
+    "name": "date_delta_days",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "bank value date - expected payout date, or batch cut-off date - event date"
+   },
+   {
+    "name": "rule_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "which matching rule fired"
+   },
+   {
+    "name": "match_status",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "MATCHED",
+     "MATCHED_TOLERANCE",
+     "MATCHED_LATE",
+     "PARTIAL",
+     "AMOUNT_MISMATCH",
+     "FEE_DIFFERENCE",
+     "CURRENCY_MISMATCH"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "matched_at",
+    "type": "TIMESTAMP",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "the nightly run"
+   }
+  ]
+ },
+ "exceptions": {
+  "description": "Every unmatched, partial or inconsistent item found by the engine.",
+  "primary_key": "exception_id",
+  "cardinality": "optional N:1 reconciliation_matches; 1:0..1 resolutions; 1:N status_history",
+  "lifecycle": "OPEN -> IN_REVIEW -> ESCALATED -> RESOLVED or WRITTEN_OFF (OPEN -> RESOLVED for automatic dedupe). Effective dates: detected_at, sla_due_at.",
+  "foreign_keys": [
+   {
+    "column": "payment_id",
+    "references": "payment_orders.payment_id"
+   },
+   {
+    "column": "batch_id",
+    "references": "settlement_batches.batch_id"
+   },
+   {
+    "column": "bank_line_id",
+    "references": "bank_statement_lines.bank_line_id"
+   },
+   {
+    "column": "processor_event_id",
+    "references": "processor_events.processor_event_id"
+   },
+   {
+    "column": "settlement_line_id",
+    "references": "settlement_lines.settlement_line_id"
+   },
+   {
+    "column": "match_id",
+    "references": "reconciliation_matches.match_id"
+   }
+  ],
+  "fields": [
+   {
+    "name": "exception_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": true,
+    "rule": "EXC-2026-000001 pattern"
+   },
+   {
+    "name": "exception_type",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "DUPLICATE_EVENT",
+     "REFUND_BEFORE_CAPTURE",
+     "UNMATCHED_EVENT",
+     "DUPLICATE_SETTLEMENT_LINE",
+     "DELAYED_SETTLEMENT",
+     "UNMATCHED_BATCH",
+     "PARTIAL_PAYOUT",
+     "CURRENCY_MISMATCH",
+     "FEE_DIFFERENCE",
+     "AMOUNT_MISMATCH",
+     "DELAYED_PAYOUT",
+     "UNMATCHED_BANK_LINE"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "severity",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "LOW",
+     "MEDIUM",
+     "HIGH"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": "fixed per exception type"
+   },
+   {
+    "name": "status",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "OPEN",
+     "IN_REVIEW",
+     "ESCALATED",
+     "RESOLVED",
+     "WRITTEN_OFF"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": "state as of the as-of date; history in status_history"
+   },
+   {
+    "name": "entity_type",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "PROCESSOR_EVENT",
+     "SETTLEMENT_LINE",
+     "SETTLEMENT_BATCH",
+     "BANK_LINE"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "entity_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "the main subject of the exception"
+   },
+   {
+    "name": "payment_id",
+    "type": "STRING",
+    "required": false,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "batch_id",
+    "type": "STRING",
+    "required": false,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "bank_line_id",
+    "type": "STRING",
+    "required": false,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "processor_event_id",
+    "type": "STRING",
+    "required": false,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "settlement_line_id",
+    "type": "STRING",
+    "required": false,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "match_id",
+    "type": "STRING",
+    "required": false,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "amount_at_risk_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": ">= 0"
+   },
+   {
+    "name": "currency",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "USD",
+     "EUR",
+     "GBP",
+     "INR"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "detected_at",
+    "type": "TIMESTAMP",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "nightly run, 02:00Z"
+   },
+   {
+    "name": "sla_due_at",
+    "type": "TIMESTAMP",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "HIGH 2 days, MEDIUM 5, LOW 10 after detection"
+   },
+   {
+    "name": "assigned_role",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "OPS_ANALYST",
+     "RISK_REVIEWER",
+     "SYSTEM"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "rule_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "the engine rule that raised it"
+   },
+   {
+    "name": "description",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   }
+  ]
+ },
+ "resolutions": {
+  "description": "How an exception was closed. Exists only once the exception is closed.",
+  "primary_key": "resolution_id",
+  "cardinality": "N:1 exceptions (at most one here); N:1 users",
+  "lifecycle": "",
+  "foreign_keys": [
+   {
+    "column": "exception_id",
+    "references": "exceptions.exception_id"
+   },
+   {
+    "column": "resolved_by",
+    "references": "users.user_id"
+   }
+  ],
+  "fields": [
+   {
+    "name": "resolution_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": true,
+    "rule": "RES-2026-000001 pattern"
+   },
+   {
+    "name": "exception_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK exceptions"
+   },
+   {
+    "name": "resolution_type",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "AUTO_DEDUPED",
+     "RESEQUENCED",
+     "MANUAL_MATCH",
+     "PROCESSOR_CLAIM_RECOVERED",
+     "WRITTEN_OFF",
+     "CLAWBACK_REQUESTED",
+     "ADJUSTMENT_BOOKED",
+     "LATE_SETTLEMENT_CONFIRMED",
+     "FX_CONVERSION_CONFIRMED",
+     "ROUNDING_ADJUSTMENT_BOOKED",
+     "LATE_PAYOUT_CONFIRMED",
+     "CLASSIFIED_NON_PSP",
+     "RETURNED_TO_SENDER"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": "must be allowed for the exception type"
+   },
+   {
+    "name": "resolved_by",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK users"
+   },
+   {
+    "name": "resolved_ts",
+    "type": "TIMESTAMP",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ">= detected_at, <= as-of"
+   },
+   {
+    "name": "adjustment_amount_minor",
+    "type": "INT",
+    "required": true,
+    "allowed": null,
+    "unit": "minor units",
+    "unique": false,
+    "rule": ">= 0"
+   },
+   {
+    "name": "currency",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "USD",
+     "EUR",
+     "GBP",
+     "INR"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "notes",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   }
+  ]
+ },
+ "status_history": {
+  "description": "Append-only status changes of exceptions: who and when. Rows are never updated.",
+  "primary_key": "history_id",
+  "cardinality": "N:1 exceptions; N:1 users",
+  "lifecycle": "",
+  "foreign_keys": [
+   {
+    "column": "changed_by",
+    "references": "users.user_id"
+   }
+  ],
+  "fields": [
+   {
+    "name": "history_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": true,
+    "rule": "HIS-0000001 pattern"
+   },
+   {
+    "name": "entity_type",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "EXCEPTION"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "entity_id",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "exception_id"
+   },
+   {
+    "name": "from_status",
+    "type": "STRING",
+    "required": false,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "empty on creation"
+   },
+   {
+    "name": "to_status",
+    "type": "STRING",
+    "required": true,
+    "allowed": [
+     "OPEN",
+     "IN_REVIEW",
+     "ESCALATED",
+     "RESOLVED",
+     "WRITTEN_OFF"
+    ],
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "changed_at",
+    "type": "TIMESTAMP",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": ""
+   },
+   {
+    "name": "changed_by",
+    "type": "STRING",
+    "required": true,
+    "allowed": null,
+    "unit": "",
+    "unique": false,
+    "rule": "FK users"
+   }
+  ]
+ }
+}

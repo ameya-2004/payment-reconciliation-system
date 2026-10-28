@@ -1,0 +1,181 @@
+{
+ "detection": {
+  "overall_expected": 114,
+  "true_pos": 114,
+  "false_neg": 0,
+  "false_pos": 0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "exceptions_raised_on_labelled_normal_records": 0,
+  "per_type": {
+   "DUPLICATE_EVENT": {
+    "expected": 1,
+    "detected": 1,
+    "true_pos": 1,
+    "false_neg": 0,
+    "false_pos": 0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "REFUND_BEFORE_CAPTURE": {
+    "expected": 1,
+    "detected": 1,
+    "true_pos": 1,
+    "false_neg": 0,
+    "false_pos": 0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "UNMATCHED_EVENT": {
+    "expected": 1,
+    "detected": 1,
+    "true_pos": 1,
+    "false_neg": 0,
+    "false_pos": 0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "DUPLICATE_SETTLEMENT_LINE": {
+    "expected": 1,
+    "detected": 1,
+    "true_pos": 1,
+    "false_neg": 0,
+    "false_pos": 0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "DELAYED_SETTLEMENT": {
+    "expected": 103,
+    "detected": 103,
+    "true_pos": 103,
+    "false_neg": 0,
+    "false_pos": 0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "UNMATCHED_BATCH": {
+    "expected": 1,
+    "detected": 1,
+    "true_pos": 1,
+    "false_neg": 0,
+    "false_pos": 0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "PARTIAL_PAYOUT": {
+    "expected": 1,
+    "detected": 1,
+    "true_pos": 1,
+    "false_neg": 0,
+    "false_pos": 0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "CURRENCY_MISMATCH": {
+    "expected": 1,
+    "detected": 1,
+    "true_pos": 1,
+    "false_neg": 0,
+    "false_pos": 0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "FEE_DIFFERENCE": {
+    "expected": 1,
+    "detected": 1,
+    "true_pos": 1,
+    "false_neg": 0,
+    "false_pos": 0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "AMOUNT_MISMATCH": {
+    "expected": 1,
+    "detected": 1,
+    "true_pos": 1,
+    "false_neg": 0,
+    "false_pos": 0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "DELAYED_PAYOUT": {
+    "expected": 1,
+    "detected": 1,
+    "true_pos": 1,
+    "false_neg": 0,
+    "false_pos": 0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "UNMATCHED_BANK_LINE": {
+    "expected": 1,
+    "detected": 1,
+    "true_pos": 1,
+    "false_neg": 0,
+    "false_pos": 0,
+    "precision": 1.0,
+    "recall": 1.0
+   }
+  }
+ },
+ "matching": {
+  "match_rows_by_level_and_status": {
+   "BANK_TO_BATCH/AMOUNT_MISMATCH": 5,
+   "BANK_TO_BATCH/CURRENCY_MISMATCH": 5,
+   "BANK_TO_BATCH/FEE_DIFFERENCE": 5,
+   "BANK_TO_BATCH/MATCHED": 69,
+   "BANK_TO_BATCH/MATCHED_LATE": 6,
+   "BANK_TO_BATCH/MATCHED_TOLERANCE": 5,
+   "BANK_TO_BATCH/PARTIAL": 4,
+   "EVENT_TO_LINE/MATCHED": 893,
+   "EVENT_TO_LINE/MATCHED_LATE": 103
+  }
+ },
+ "workflow": {
+  "exceptions_by_status": {
+   "RESOLVED": 113,
+   "WRITTEN_OFF": 1
+  },
+  "mean_hours_to_resolve_by_type": {
+   "AMOUNT_MISMATCH": 160.5,
+   "CURRENCY_MISMATCH": 196.4,
+   "DELAYED_PAYOUT": 7.7,
+   "DELAYED_SETTLEMENT": 40.1,
+   "DUPLICATE_EVENT": 0.0,
+   "DUPLICATE_SETTLEMENT_LINE": 29.0,
+   "FEE_DIFFERENCE": 62.0,
+   "PARTIAL_PAYOUT": 311.9,
+   "REFUND_BEFORE_CAPTURE": 40.8,
+   "UNMATCHED_BANK_LINE": 108.5,
+   "UNMATCHED_BATCH": 120.7,
+   "UNMATCHED_EVENT": 49.4
+  },
+  "exceptions_by_type": {
+   "DELAYED_SETTLEMENT": 103,
+   "CURRENCY_MISMATCH": 1,
+   "UNMATCHED_BATCH": 1,
+   "DUPLICATE_SETTLEMENT_LINE": 1,
+   "DELAYED_PAYOUT": 1,
+   "REFUND_BEFORE_CAPTURE": 1,
+   "PARTIAL_PAYOUT": 1,
+   "DUPLICATE_EVENT": 1,
+   "UNMATCHED_BANK_LINE": 1,
+   "UNMATCHED_EVENT": 1,
+   "AMOUNT_MISMATCH": 1,
+   "FEE_DIFFERENCE": 1
+  },
+  "amount_at_risk_minor_by_currency": {
+   "INR": 30026710,
+   "GBP": 863015,
+   "USD": 304699,
+   "EUR": 264342
+  }
+ },
+ "batches_fully_matched_to_bank": 14,
+ "batches_total": 20,
+ "engine_counters": {
+  "webhook_redeliveries_deduped": 17,
+  "pipeline_duplicates": 1
+ },
+ "tolerance_minor_used": 2
+}

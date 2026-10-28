@@ -1,0 +1,27 @@
+.env
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# the full dataset is ~70 MB; regenerate it with: python run_workflow.py --generate --data data/full
+data/full/
+# Local environment and secrets
+.env.*
+!.env.example
+
+# Local databases and logs
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Test coverage reports
+.coverage
+.coverage.*
+htmlcov/
+*.zip

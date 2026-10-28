@@ -1,0 +1,10 @@
+user_id,display_name,role
+USR-000,Recon Engine,SYSTEM
+USR-001,Ops Analyst 01,OPS_ANALYST
+USR-002,Ops Analyst 02,OPS_ANALYST
+USR-003,Ops Analyst 03,OPS_ANALYST
+USR-004,Ops Analyst 04,OPS_ANALYST
+USR-005,Ops Analyst 05,OPS_ANALYST
+USR-006,Ops Analyst 06,OPS_ANALYST
+USR-101,Risk Reviewer 01,RISK_REVIEWER
+USR-102,Risk Reviewer 02,RISK_REVIEWER

@@ -1,0 +1,5 @@
+{
+ "external_data_used": false,
+ "note": "Every value is produced by this repository's generator. Names, fees, FX rates and amounts are invented. No public dataset was downloaded, so there is no licence or attribution to record.",
+ "schema_inspiration": "general payment-processor settlement report layouts (no data copied)"
+}

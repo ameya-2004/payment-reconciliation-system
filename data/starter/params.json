@@ -1,0 +1,33 @@
+{
+ "seed": 20261022,
+ "n_merchants": 40,
+ "n_orders": 1000,
+ "n_attempts": 1100,
+ "n_batches": 20,
+ "n_bank": 100,
+ "start": "2026-01-01",
+ "end": "2026-01-22",
+ "as_of": "2026-10-22T00:00:00Z",
+ "tolerance_minor": 2,
+ "window_after_days": 3,
+ "sla_days": 8,
+ "payout_lag_bdays": 2,
+ "grace_days": 7,
+ "refund_rate": 0.085,
+ "redelivery_rate": 0.01,
+ "delayed_rate": 0.008,
+ "inj": {
+  "dup_settlement_line": 1,
+  "missing_payout": 1,
+  "partial_payout": 1,
+  "currency_mismatch": 1,
+  "fee_diff": 1,
+  "rounding_over": 1,
+  "rounding_at_tol": 1,
+  "delayed_payout": 1,
+  "refund_before_capture": 1,
+  "silently_dropped": 1,
+  "ingested_twice": 1,
+  "orphans": 1
+ }
+}

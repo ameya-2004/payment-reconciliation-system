@@ -1,0 +1,161 @@
+{
+ "passed": 31,
+ "total": 31,
+ "checks": [
+  {
+   "check": "primary keys unique + enums + NOT NULL + CHECKs (sqlite load)",
+   "status": "PASS",
+   "detail": "all tables loaded"
+  },
+  {
+   "check": "foreign key integrity (PRAGMA foreign_key_check)",
+   "status": "PASS",
+   "detail": "0 violations"
+  },
+  {
+   "check": "ID formats follow the naming convention",
+   "status": "PASS",
+   "detail": "0 bad ids"
+  },
+  {
+   "check": "child ids embed their parent id",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "row counts match requested volume",
+   "status": "PASS",
+   "detail": "merchants=40 orders=1000 attempts=1100 batches=20 bank=100"
+  },
+  {
+   "check": "attempt_ts >= order_ts",
+   "status": "PASS",
+   "detail": "0 violations"
+  },
+  {
+   "check": "received_ts >= event_ts",
+   "status": "PASS",
+   "detail": "0 violations"
+  },
+  {
+   "check": "orders are not earlier than the merchant's onboarded_date",
+   "status": "PASS",
+   "detail": "0 violations"
+  },
+  {
+   "check": "order currency equals merchant settlement currency",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "expected payout date >= cutoff date",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "refund never before capture unless labelled REFUND_BEFORE_CAPTURE",
+   "status": "PASS",
+   "detail": "0 unlabelled"
+  },
+  {
+   "check": "refunded <= captured for every order",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "order status and totals are derived from the canonical events",
+   "status": "PASS",
+   "detail": "0 orders off"
+  },
+  {
+   "check": "at most one capture per order",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "attempt status matches the events (CAPTURED only if a capture event exists)",
+   "status": "PASS",
+   "detail": "0 attempts off"
+  },
+  {
+   "check": "decline_code is set exactly on declined attempts",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "fee and refund treatment consistent (fee formula, refunds carry no fee)",
+   "status": "PASS",
+   "detail": "0 lines off"
+  },
+  {
+   "check": "batch totals equal the sum of their lines",
+   "status": "PASS",
+   "detail": "0 batches off"
+  },
+  {
+   "check": "settlement line amount/currency equals its processor event and batch",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "duplicate settlement lines are exactly the labelled ones",
+   "status": "PASS",
+   "detail": "1 duplicates, 1 labelled"
+  },
+  {
+   "check": "no settlement line points at a non-canonical event copy",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "matched amounts reconcile within tolerance (2 minor units)",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "every settleable event without a line is an exception",
+   "status": "PASS",
+   "detail": "0 missing"
+  },
+  {
+   "check": "every batch without a bank payout is an exception",
+   "status": "PASS",
+   "detail": "0 missing"
+  },
+  {
+   "check": "every unmatched bank line is an exception",
+   "status": "PASS",
+   "detail": "0 missing"
+  },
+  {
+   "check": "every partial or mismatched match row has an exception",
+   "status": "PASS",
+   "detail": "0 without"
+  },
+  {
+   "check": "resolution exists exactly for closed exceptions",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "resolved_ts >= detected_at",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "exception history starts at creation, follows the allowed moves in time order and ends at the current status",
+   "status": "PASS",
+   "detail": "0 violations"
+  },
+  {
+   "check": "every resolution type is allowed for its exception type",
+   "status": "PASS",
+   "detail": "0 not allowed"
+  },
+  {
+   "check": "ground truth is not referenced by any input table column",
+   "status": "PASS",
+   "detail": ""
+  }
+ ]
+}
