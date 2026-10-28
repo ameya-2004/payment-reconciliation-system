@@ -61,3 +61,8 @@ The following technical topics are documented as part of the project's review an
 - Reproducibility, exception traceability, resolution history, and the limitations of the included test scenarios.
 7. Tools and use
 Claude and ChatGPT were used at different stages for requirements review, implementation guidance, code review, debugging, test development, workflow validation, and documentation. The project was iterated using test and workflow results to identify and address issues.
+
+
+## Accuracy and transparency note
+
+The prompts in this document have been professionally organized and edited for readability based on the available project-development history. They represent the key requests reflected in that history and are not a verbatim transcript of every AI conversation. AI responses are omitted. This document does not claim that the edited wording reproduces the original prompts word for word.
